@@ -490,7 +490,7 @@ vars in ns-info that begin with that letter"
 (defn namespace-index-info [ns branch]
   (assoc (select-keys ns [:doc :author])
     :name (:full-name ns)
-    :wiki-url (str (params :web-home) (ns-html-file ns))
+    :wiki-url (str (params :web-home) "/" (ns-html-file ns))
     :source-url (web-src-file (.getPath (file (params :source-path) (ns-file ns))) branch)))
 
 (defn var-index-info [v ns branch]
