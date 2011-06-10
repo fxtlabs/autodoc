@@ -25,6 +25,9 @@
 (def *index-clj-file* "index~@[-~a~].clj")
 (def *index-json-file* "api-index.json")
 
+(defn markup-to-html [s]
+  (:out (sh "rdiscount" :in s)))
+
 (defn template-for
   "Get the actual filename corresponding to a template. We check in the project
 specific directory first, then sees if a parameter with that name is set, then 
@@ -182,7 +185,7 @@ looks in the base template directory."
                  #(at % [:#author-name] 
                       (content (:author ns))))
     [:a#api-link] (set-attr :href (ns-html-file ns))
-    [:pre#namespace-docstr] (content (expand-links (:doc ns)))
+    [:div#namespace-docstr] (html-content (markup-to-html (:doc ns)))
     [:span#var-link] (add-ns-vars ns)
     [:span#subspace] (if-let [subspaces (seq (:subspaces ns))]
                        (clone-for [s subspaces]
@@ -205,9 +208,11 @@ looks in the base template directory."
   [:span#header-project] (content (or (params :name) "Project"))
   [:span#header-version] (content (:version branch-info))
   [:span#header-status] (content (:status branch-info))
-  [:div#project-description] (content (or 
-                                       (make-project-description)
-                                       (params :description)))
+  ;; FIXME (FXT): put back the (or (make-project-description)...)
+  ;; stuff from the original version; without it you cannot write a
+  ;; project description in an external templates/description.html file.
+  [:div#project-description] (html-content
+                              (markup-to-html (params :description)))
 
   [:div#namespace-entry] (clone-for [ns ns-info] #(namespace-overview ns %)))
 
@@ -357,7 +362,7 @@ actually changed). This reduces the amount of random doc file changes that happe
      (content (:name v)))
     [:span#var-type] (content (:var-type v))
     [:pre#var-usage] (content (var-usage v))
-    [:pre#var-docstr] (content (expand-links (:doc v)))
+    [:div#var-docstr] (html-content (markup-to-html (:doc v)))
     [:a#var-source] (fn [n] (when-let [link (var-src-link v (:name branch-info))]
                               (apply (set-attr :href link) [n])))
     [:.var-added] (when (:added v)
@@ -393,7 +398,7 @@ actually changed). This reduces the amount of random doc file changes that happe
                               #(at % [:#author-name] 
                                    (content (:author ns))))
         [:span#long-name] (content (:full-name ns))
-        [:pre#namespace-docstr] (content (expand-links (:doc ns)))
+        [:div#namespace-docstr] (html-content (markup-to-html (:doc ns)))
         [:span#see-also] (see-also-links ns)
         [:.ns-added] (when (:added ns)
                        #(at % [:#content]
